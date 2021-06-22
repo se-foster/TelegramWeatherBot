@@ -3,10 +3,19 @@ package sber.itschool.WeatherBot.Config;
 public class User {
 
     String city;
-//    Integer zipCode;
-//    String countryCode;
-//    Float latitude;
-//    Float longitude;
+    Integer zipCode;
+    String countryCode;
+    Float latitude;
+    Float longitude;
+    BotState botState;
+
+    public BotState getBotState() {
+        return botState;
+    }
+
+    public void setBotState(BotState botState) {
+        this.botState = botState;
+    }
 
     public String getCity() {
         return city;
