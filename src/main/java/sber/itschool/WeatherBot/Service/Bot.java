@@ -43,7 +43,9 @@ public class Bot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         if (keyboardCity == null || keyboardForecast == null)
             initializeKeyboards();
-        if (!isNewUser(update) && (update.hasMessage() && update.getMessage().hasText())) {
+        if (isNewUser(update)) {
+            greeting(update);
+        } else if (update.hasMessage() && update.getMessage().hasText()) {
             readUserCommand(update);
         }
         processBotState(update);
