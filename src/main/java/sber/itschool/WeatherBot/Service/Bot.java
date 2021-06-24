@@ -132,7 +132,7 @@ public class Bot extends TelegramLongPollingBot {
     private void readIndex(Update update) {
         Long chatId = update.getMessage().getChatId();
         String userInput = update.getMessage().getText();
-        if (!isIndex(userInput)) {
+        if (!update.getMessage().hasText() || !isIndex(userInput)) {
             SendMessage sendMessage = new SendMessage();
             sendMessage.setChatId(chatId.toString());
             sendMessage.setText("Неправильный индекс!\n" +
@@ -147,13 +147,19 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private boolean isIndex(String userInput) {
+        int index;
         for (char c : userInput.toCharArray()) {
             if (!Character.isDigit(c)) {
                 return false;
             }
         }
         // проверка, что индекс не начинается с нулей
-        int index = Integer.parseInt(userInput);
+        try {
+            index = Integer.parseInt(userInput);
+        }
+        catch (NumberFormatException e) {
+            return false;
+        }
         return Integer.toString(index).length() == 6;
     }
 
@@ -168,10 +174,12 @@ public class Bot extends TelegramLongPollingBot {
 
     private void readCity(Update update) {
         Long chatId = update.getMessage().getChatId();
-        users.get(chatId).setCity(update.getMessage().getText());
-        users.get(chatId).setIndex(null);
-        users.get(chatId).setBotState(BotState.DEFAULT);
-        forecast(update);
+        if (update.getMessage().hasText()) {
+            users.get(chatId).setCity(update.getMessage().getText());
+            users.get(chatId).setIndex(null);
+            users.get(chatId).setBotState(BotState.DEFAULT);
+            forecast(update);
+        }
     }
 
     private void changeCity(Update update) {
@@ -241,6 +249,7 @@ public class Bot extends TelegramLongPollingBot {
     private void forecast(Update update) {
         String settings;
         Long chatId = update.getMessage().getChatId();
+
         if (users.get(chatId).getCity() != null) {
             settings = "Город: " + users.get(chatId).getCity();
         } else
