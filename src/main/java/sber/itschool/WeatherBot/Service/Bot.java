@@ -98,12 +98,30 @@ public class Bot extends TelegramLongPollingBot {
 
     public void readIndex(Update update) {
         Long chatId = update.getMessage().getChatId();
-        users.get(chatId).setIndex(Integer.parseInt(update.getMessage().getText()));
+        String userInput = update.getMessage().getText();
+        if (!isIndex(userInput)) {
+            SendMessage sendMessage = new SendMessage();
+            sendMessage.setChatId(chatId.toString());
+            sendMessage.setText("Неправильный индекс!");
+            return;
+        }
+        users.get(chatId).setIndex(Integer.parseInt(userInput));
         users.get(chatId).setCity(null);
         users.get(chatId).setBotState(BotState.DEFAULT);
     }
 
-    public void changeIndex(Update update) {
+    private boolean isIndex(String userInput) {
+        for (char c : userInput.toCharArray()) {
+            if (!Character.isDigit(c)) {
+                return false;
+            }
+        }
+        // проверяем, что пользовать не ввел индекс, начинающийся с нуля
+        int index = Integer.parseInt(userInput);
+        return Integer.toString(index).length() == 6;
+    }
+
+    private void changeIndex(Update update) {
         Long chatId = update.getMessage().getChatId();
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId.toString());
@@ -116,14 +134,14 @@ public class Bot extends TelegramLongPollingBot {
         users.get(chatId).setBotState(BotState.READ_INDEX);
     }
 
-    public void readCity(Update update) {
+    private void readCity(Update update) {
         Long chatId = update.getMessage().getChatId();
         users.get(chatId).setCity(update.getMessage().getText());
         users.get(chatId).setIndex(null);
         users.get(chatId).setBotState(BotState.DEFAULT);
     }
 
-    public void changeCity(Update update) {
+    private void changeCity(Update update) {
         Long chatId = update.getMessage().getChatId();
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId.toString());
@@ -136,7 +154,7 @@ public class Bot extends TelegramLongPollingBot {
         users.get(chatId).setBotState(BotState.READ_CITY);
     }
 
-    public void greeting(Update update) {
+    private void greeting(Update update) {
         Long chatId = update.getMessage().getChatId();
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId.toString());
