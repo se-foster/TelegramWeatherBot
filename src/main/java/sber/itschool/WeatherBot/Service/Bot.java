@@ -109,20 +109,30 @@ public class Bot extends TelegramLongPollingBot {
         SendMessage sendMessage = new SendMessage();
         Long chatId = update.getMessage().getChatId();
 
+        if (users.get(chatId).getBotState() == null) {
+            changeCityOrIndex(update);
+            return;
+        }
+
         if (users.get(chatId).getBotState() == BotState.CURRENT_FORECAST) {
             forecastType = "weather";
         } else {
             forecastType = "forecast";
         }
+
         sendMessage.setChatId(chatId.toString());
         if (users.get(chatId).getCity() != null) {
             messageText = weatherRequest.getForecast(users.get(chatId).getCity(), forecastType);
         } else {
             messageText = weatherRequest.getForecast(users.get(chatId).getIndex(), forecastType);
         }
-        if (messageText == null) {
+        if (messageText.equals("CityNotFound")) {
             messageText = "Такой город по названию или индексу не найден, измени настройки";
             users.get(chatId).setBotState(BotState.DESTINATION_NOT_FOUND);
+        }
+        if (messageText.equals("ERROR")) {
+            messageText = "Произошла критическая ошибка на при запросе прогноза погоды от сервера. Попробуйте позже";
+            users.get(chatId).setBotState(BotState.DEFAULT);
         }
         sendMessage.setText(messageText);
         sendMessageToUser(sendMessage);
