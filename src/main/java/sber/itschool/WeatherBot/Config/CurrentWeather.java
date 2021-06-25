@@ -129,6 +129,21 @@ public class CurrentWeather {
         }
     }
 
+    private static class Rain {
+
+        float oneHour;
+        float threeHour;
+
+        
+        public void setOneHour(float oneHour) {
+            this.oneHour = oneHour;
+        }
+
+        public void setThreeHour(float threeHour) {
+            this.threeHour = threeHour;
+        }
+    }
+
     private static class Sys {
         private int type;
         private long id;
@@ -170,7 +185,7 @@ public class CurrentWeather {
     private long id;
     private String name;
     private int cod;
-    private SimpleDateFormat date = new SimpleDateFormat("EE d MMMM HH:mm", Locale.forLanguageTag("ru"));
+    private SimpleDateFormat date = new SimpleDateFormat("E d MMM HH:mm", Locale.forLanguageTag("ru"));
 
     private final Icons icons = new Icons();
 
@@ -227,6 +242,8 @@ public class CurrentWeather {
     }
 
     public String CurrentForecast() {
+
+        date.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         return name + "\n" +
               date.format(new Date((dt + timezone) * 1000)) + " " + icons.iconsMap.get(weather[0].icon) + "\n"
