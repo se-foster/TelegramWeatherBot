@@ -48,32 +48,16 @@ public class WeatherRequest {
     }
 
     private String callForecast(String urlString) throws CityNotFoundException {
-//        String message = null;
-        ObjectMapper mapper = new ObjectMapper();
-        Map<String, Object> map = null;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        CurrentWeather currentWeather = null;
         try {
             URL url = new URL(urlString);
-//            HttpURLConnection connection = (HttpURLConnection) urlObject.openConnection();
-//            connection.setRequestMethod("GET");
-//            connection.setRequestProperty("User-Agent", "Mozilla/5.0");
-//            int responseCode = connection.getResponseCode();
-//            if (responseCode == 404) {
-//                throw new CityNotFoundException(urlString + " doesn't found, responseCode 404");
-//            }
-//            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-//            String inputLine;
-//            StringBuffer response = new StringBuffer();
-//            while ((inputLine = in.readLine()) != null) {
-//                response.append(inputLine);
-//            }
-//            in.close();
-//            message = response.toString();
-            map = mapper.readValue(url, Map.class);
+            currentWeather = objectMapper.readValue(url, CurrentWeather.class);
         } catch (IOException e) {
-            log.error(e.toString(), e);
+            e.printStackTrace();
         }
-        System.out.println(map);
-        return "nice";
+        return currentWeather.toString();
     }
 
 }
