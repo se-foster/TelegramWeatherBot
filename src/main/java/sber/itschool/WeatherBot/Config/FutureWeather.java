@@ -1,7 +1,6 @@
 package sber.itschool.WeatherBot.Config;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSetter;
 import lombok.Setter;
 
 import java.text.SimpleDateFormat;
@@ -9,7 +8,7 @@ import java.util.*;
 
 @Setter
 @JsonIgnoreProperties(value = {"coord", "clouds", "id", "cod", "base", "visibility", "rain", "snow"})
-public class CurrentWeather {
+public class FutureWeather {
 
     private static class Icons {
         private final Map<String, String> iconsMap = new HashMap<>();
