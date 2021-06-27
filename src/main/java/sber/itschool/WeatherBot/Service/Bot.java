@@ -5,9 +5,6 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import sber.itschool.WeatherBot.Config.BotConfig;
 import sber.itschool.WeatherBot.Config.BotState;
@@ -20,9 +17,9 @@ import java.util.*;
 public class Bot extends TelegramLongPollingBot {
 
     final BotConfig botConfig;
-    Map<Long, User> users = new HashMap<>();
-    ReplyKeyboardMarkup keyboardCity;
-    ReplyKeyboardMarkup keyboardForecast;
+    Map<Long, User> users = new HashMap<>(); //TODO serialize to json
+//    ReplyKeyboardMarkup keyboardCity;
+//    ReplyKeyboardMarkup keyboardForecast;
     WeatherRequest weatherRequest = new WeatherRequest();
 
     public Bot(BotConfig botConfig) {
@@ -41,14 +38,37 @@ public class Bot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        if (keyboardCity == null || keyboardForecast == null)
-            initializeKeyboards();
+//        if (keyboardCity == null || keyboardForecast == null)
+//            initializeKeyboards();
         if (isNewUser(update)) {
             greeting(update);
-        } else if (update.hasMessage() && update.getMessage().hasText()) {
+        }
+        if (checkSettings(update)) {
+            changeLocation(update);
+        }
+        if (update.hasMessage() && update.getMessage().hasText()) {
             readUserCommand(update);
         }
         processBotState(update);
+    }
+
+    public void changeLocation(Update update) {
+        Long chatId = update.getMessage().getChatId();
+        User user = users.get(chatId);
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(chatId.toString());
+        sendMessage.setText("Отправь мне название города на ЛЮБОМ языке, 6 цифр индекса города РФ или геолокацию");
+        user.setBotState(BotState.CHANGE_SETTINGS);
+        sendMessageToUser(sendMessage);
+    }
+
+    public boolean checkSettings(Update update) {
+        Long chatId = update.getMessage().getChatId();
+        User user = users.get(chatId);
+        if (user.getCity() == null && user.getIndex() == null) {
+            return true;
+        }
+        return false;
     }
 
     private void readUserCommand(Update update) {
@@ -57,19 +77,19 @@ public class Bot extends TelegramLongPollingBot {
             case "/start":
                 greeting(update);
                 break;
-            case "Сменить город":
+            case "/settings":
                 users.get(chatId).setBotState(BotState.CHANGE_CITY_OR_INDEX);
                 break;
-            case "по названию":
-                users.get(chatId).setBotState(BotState.CHANGE_CITY);
-                break;
-            case "по индексу":
-                users.get(chatId).setBotState(BotState.CHANGE_INDEX);
-                break;
-            case "Погода сейчас":
+//            case "по названию":
+//                users.get(chatId).setBotState(BotState.CHANGE_CITY);
+//                break;
+//            case "по индексу":
+//                users.get(chatId).setBotState(BotState.CHANGE_INDEX);
+//                break;
+            case "/current":
                 users.get(chatId).setBotState(BotState.CURRENT_FORECAST);
                 break;
-            case "На 5 дней":
+            case "/future":
                 users.get(chatId).setBotState(BotState.FUTURE_FORECAST);
                 break;
         }
@@ -211,39 +231,33 @@ public class Bot extends TelegramLongPollingBot {
         sendMessageToUser(sendMessage);
     }
 
-    private void initializeKeyboards() {
-        keyboardCity = new ReplyKeyboardMarkup();
-        ArrayList<KeyboardRow> keyboardCityArray = new ArrayList<>();
-        KeyboardRow keyboardCityRow = new KeyboardRow();
-        keyboardCityRow.add(new KeyboardButton("по названию"));
-        keyboardCityRow.add(new KeyboardButton("по индексу"));
-        keyboardCityArray.add(keyboardCityRow);
-        keyboardCity.setKeyboard(keyboardCityArray);
-        keyboardCity.setResizeKeyboard(true);
-
-        keyboardForecast = new ReplyKeyboardMarkup();
-        ArrayList<KeyboardRow> keyboardForecastArray = new ArrayList<>();
-        KeyboardRow keyboardForecast1 = new KeyboardRow();
-        KeyboardRow keyboardForecast2 = new KeyboardRow();
-        keyboardForecast1.add(new KeyboardButton("Погода сейчас"));
-        keyboardForecast1.add(new KeyboardButton("На 5 дней"));
-        keyboardForecast2.add(new KeyboardButton("Сменить город"));
-        keyboardForecastArray.add(keyboardForecast1);
-        keyboardForecastArray.add(keyboardForecast2);
-        keyboardForecast.setKeyboard(keyboardForecastArray);
-        keyboardForecast.setResizeKeyboard(true);
-    }
+//    private void initializeKeyboards() {
+//        keyboardCity = new ReplyKeyboardMarkup();
+//        ArrayList<KeyboardRow> keyboardCityArray = new ArrayList<>();
+//        KeyboardRow keyboardCityRow = new KeyboardRow();
+//        keyboardCityRow.add(new KeyboardButton("по названию"));
+//        keyboardCityRow.add(new KeyboardButton("по индексу"));
+//        keyboardCityArray.add(keyboardCityRow);
+//        keyboardCity.setKeyboard(keyboardCityArray);
+//        keyboardCity.setResizeKeyboard(true);
+//
+//        keyboardForecast = new ReplyKeyboardMarkup();
+//        ArrayList<KeyboardRow> keyboardForecastArray = new ArrayList<>();
+//        KeyboardRow keyboardForecast1 = new KeyboardRow();
+//        KeyboardRow keyboardForecast2 = new KeyboardRow();
+//        keyboardForecast1.add(new KeyboardButton("Погода сейчас"));
+//        keyboardForecast1.add(new KeyboardButton("На 5 дней"));
+//        keyboardForecast2.add(new KeyboardButton("Сменить город"));
+//        keyboardForecastArray.add(keyboardForecast1);
+//        keyboardForecastArray.add(keyboardForecast2);
+//        keyboardForecast.setKeyboard(keyboardForecastArray);
+//        keyboardForecast.setResizeKeyboard(true);
+//    }
 
     private boolean isNewUser(Update update) {
-
         Long chatId = update.getMessage().getChatId();
         if (users.get(chatId) == null) {
             users.put(chatId, new User());
-        }
-
-        User user = users.get(chatId);
-        if (user.getBotState() == null) {
-            user.setBotState(BotState.CHANGE_CITY_OR_INDEX);
             return true;
         }
         return false;
@@ -254,7 +268,7 @@ public class Bot extends TelegramLongPollingBot {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId.toString());
         sendMessage.setText("Давай настроим город! Выбери способ:");
-        sendMessage.setReplyMarkup(keyboardCity);
+//        sendMessage.setReplyMarkup(keyboardCity);
         sendMessageToUser(sendMessage);
     }
 
@@ -270,7 +284,7 @@ public class Bot extends TelegramLongPollingBot {
         sendMessage.setChatId(chatId.toString());
         sendMessage.setText("Текущие настройки - " + settings + "\n" +
                 "Выбери интересующий прогноз");
-        sendMessage.setReplyMarkup(keyboardForecast);
+//        sendMessage.setReplyMarkup(keyboardForecast);
         sendMessageToUser(sendMessage);
     }
 

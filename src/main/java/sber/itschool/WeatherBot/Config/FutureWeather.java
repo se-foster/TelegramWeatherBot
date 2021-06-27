@@ -7,7 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Setter
-@JsonIgnoreProperties(value = {"cod", "message"})
+@JsonIgnoreProperties(value = {"cod", "message", "cnt"})
 public class FutureWeather {
 
     @Setter
@@ -17,7 +17,7 @@ public class FutureWeather {
         private CurrentWeather.Main main;
         private CurrentWeather.Weather[] weather;
         private CurrentWeather.Wind wind;
-        private int pop;
+        private float pop;
     }
 
     @Setter
@@ -29,33 +29,49 @@ public class FutureWeather {
         private long sunset;
     }
 
-    private int cnt;
     private WeatherArray[] list;
     private City city;
 
-    private SimpleDateFormat date = new SimpleDateFormat("E d MMM HH:mm", Locale.forLanguageTag("ru"));
-    private SimpleDateFormat time = new SimpleDateFormat("HH:mm");
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("E d MMM", Locale.forLanguageTag("ru"));
+    private SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+    private SimpleDateFormat dayNumber = new SimpleDateFormat("d");
+    private SimpleDateFormat hour = new SimpleDateFormat("h");
 
     private final Icons icons = new Icons();
 
     public String FutureForecast() {
 
- //       String temperature = String.format("\uD83C\uDF21️%+.0f°C, ощущается как %+.0f°C",
-//                main.temp, main.feels_like);
+        Date date;
+        int day = 0;
+        String result = city.name + "\n";
+        String res1 = "";
+        String temperature;
 
-        date.setTimeZone(TimeZone.getTimeZone("UTC"));
-        time.setTimeZone(TimeZone.getTimeZone("UTC"));
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        timeFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        dayNumber.setTimeZone(TimeZone.getTimeZone("UTC"));
+        hour.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-        return "done!";
+        for (var i : list) {
+            date = new Date((i.dt + city.timezone) * 1000);
+            temperature = String.format("\uD83C\uDF21️ %+.0f°C ", i.main.temp);
+//            if (day != Integer.parseInt(dayNumber.format(date))) {
+//                result = String.join("\n", result,
+//                        "\uD83D\uDDD3" + dateFormat.format(date) + "\n");
+//                day = Integer.parseInt(dayNumber.format(date));
+//            }
+            result = String.join(" ", result, "\uD83D\uDDD3", dateFormat.format(date),
+                    icons.iconsMap.get(hour.format(date)), timeFormat.format(date), "\n",
+                    icons.iconsMap.get(i.weather[0].icon), i.weather[0].description, "\n",
+                    temperature,
+                    "\uD83D\uDCA8", Integer.toString(Math.round(i.wind.speed)), "м/с",
+                    "\uD83E\uDDED", i.wind.getDirection(), "☔", (int) (i.pop * 100) + "%",
+                    "\n\n");
+        }
 
-//        return name + "\n" +
-//                date.format(new Date((dt + timezone) * 1000)) +
-//                " " + icons.iconsMap.get(weather[0].icon) +
-//                " " + weather[0].description + "\n" +
- //               temperature  + "\n" +
- //               "атмосферное давление " + Math.round(main.pressure * 0.75) + " мм рт.ст.\n" +
-//                "влажность " + main.humidity + "%   " +
-//                "\uD83D\uDCA8 " + Math.round(wind.speed) + " м/с" + " \uD83E\uDDED " + wind.getDirection() + "\n" +
+        return result;
+
+
 //                "\uD83C\uDF05 " + time.format(new Date((sys.sunrise + timezone) * 1000)) +
 //                " \uD83C\uDF06 " + time.format(new Date((sys.sunset + timezone) * 1000));
     }

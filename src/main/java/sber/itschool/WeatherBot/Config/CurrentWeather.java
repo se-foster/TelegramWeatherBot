@@ -13,26 +13,26 @@ public class CurrentWeather {
     @Setter
     @JsonIgnoreProperties(value = {"id", "main"})
     static class Weather {
-        private String description;
-        private String icon;
+        String description;
+        String icon;
     }
 
     @Setter
     @JsonIgnoreProperties(value = {"sea_level", "grnd_level", "temp_kf"})
     static class Main {
-        private float temp;
-        private float feels_like;
-        private float temp_min;
-        private float temp_max;
-        private float pressure;
-        private int humidity;
+        float temp;
+        float feels_like;
+        float temp_min;
+        float temp_max;
+        float pressure;
+        int humidity;
     }
 
     @Setter
     static class Wind {
-        private float speed;
-        private float deg;
-        private float gust;
+        float speed;
+        float deg;
+        float gust;
 
         public String getDirection() {
             if (deg < 11.25)
@@ -100,10 +100,8 @@ public class CurrentWeather {
         date.setTimeZone(TimeZone.getTimeZone("UTC"));
         time.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-        return name + "\n" +
-                date.format(new Date((dt + timezone) * 1000)) +
-                " " + icons.iconsMap.get(weather[0].icon) +
-                " " + weather[0].description + "\n" +
+        return name + " \uD83D\uDDD3 " + date.format(new Date((dt + timezone) * 1000)) + "\n" +
+                " " + icons.iconsMap.get(weather[0].icon) + " " + weather[0].description + "\n" +
                 temperature  + "\n" +
                 "атмосферное давление " + Math.round(main.pressure * 0.75) + " мм рт.ст.\n" +
                 "влажность " + main.humidity + "%   " +
