@@ -1,7 +1,6 @@
 package sber.itschool.WeatherBot.Config;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSetter;
 import lombok.Setter;
 
 import java.text.SimpleDateFormat;
@@ -11,35 +10,16 @@ import java.util.*;
 @JsonIgnoreProperties(value = {"coord", "clouds", "id", "cod", "base", "visibility", "rain", "snow"})
 public class CurrentWeather {
 
-    private static class Icons {
-        private final Map<String, String> iconsMap = new HashMap<>();
-        private Icons() {
-            iconsMap.put("10d", "\uD83C\uDF26");
-            iconsMap.put("09d", "\uD83C\uDF27");
-            iconsMap.put("11d", "\uD83C\uDF29");
-            iconsMap.put("13d", "❄️");
-            iconsMap.put("50d", "\uD83C\uDF2B");
-            iconsMap.put("01d", "☀️");
-            iconsMap.put("01n", "\uD83C\uDF0C");
-            iconsMap.put("02d", "\uD83C\uDF24");
-            iconsMap.put("02n", "\uD83C\uDF14");
-            iconsMap.put("03d", "⛅");
-            iconsMap.put("03n", "☁️");
-            iconsMap.put("04d", "\uD83C\uDF25");
-            iconsMap.put("04n", "☁️");
-        }
-    }
-
     @Setter
     @JsonIgnoreProperties(value = {"id", "main"})
-    private static class Weather {
+    static class Weather {
         private String description;
         private String icon;
     }
 
     @Setter
-    @JsonIgnoreProperties(value = {"sea_level", "grnd_level"})
-    private static class Main {
+    @JsonIgnoreProperties(value = {"sea_level", "grnd_level", "temp_kf"})
+    static class Main {
         private float temp;
         private float feels_like;
         private float temp_min;
@@ -49,7 +29,7 @@ public class CurrentWeather {
     }
 
     @Setter
-    private static class Wind {
+    static class Wind {
         private float speed;
         private float deg;
         private float gust;
