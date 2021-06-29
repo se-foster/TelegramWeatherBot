@@ -18,8 +18,6 @@ public class Bot extends TelegramLongPollingBot {
 
     final BotConfig botConfig;
     Map<Long, User> users = new HashMap<>(); //TODO serialize to json
-//    ReplyKeyboardMarkup keyboardCity;
-//    ReplyKeyboardMarkup keyboardForecast;
     WeatherRequest weatherRequest = new WeatherRequest();
 
     public Bot(BotConfig botConfig) {
@@ -38,54 +36,28 @@ public class Bot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-//        if (keyboardCity == null || keyboardForecast == null)
-//            initializeKeyboards();
-        if (isNewUser(update)) {
-            greeting(update);
-        }
-        if (checkSettings(update)) {
-            changeLocation(update);
+        Long chatId = update.getMessage().getChatId();
+        if (users.get(chatId) == null) {
+            users.put(chatId, new User());
         }
         if (update.hasMessage() && update.getMessage().hasText()) {
-            readUserCommand(update);
+            readUserCommand(update, chatId);
         }
-        processBotState(update);
+        processBotState(update, chatId);
     }
 
-    public void changeLocation(Update update) {
-        Long chatId = update.getMessage().getChatId();
-        User user = users.get(chatId);
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId.toString());
-        sendMessage.setText("Отправь мне название города на ЛЮБОМ языке, 6 цифр индекса города РФ или геолокацию");
-        user.setBotState(BotState.CHANGE_SETTINGS);
-        sendMessageToUser(sendMessage);
-    }
 
-    public boolean checkSettings(Update update) {
-        Long chatId = update.getMessage().getChatId();
-        User user = users.get(chatId);
-        if (user.getCity() == null && user.getIndex() == null) {
-            return true;
+
+    private void readUserCommand(Update update, Long chatId) {
+        String userCommand = update.getMessage().getText();
+        if (users.get(chatId).getBotState() != BotState.DEFAULT &&
+                (userCommand.equals("/current") || userCommand.equals("/future"))) {
+            sendMessageToUser(chatId, "сначала отправь город, индекс или GPS координаты");
         }
-        return false;
-    }
-
-    private void readUserCommand(Update update) {
-        Long chatId = update.getMessage().getChatId();
         switch (update.getMessage().getText()) {
-            case "/start":
-                greeting(update);
-                break;
             case "/settings":
-                users.get(chatId).setBotState(BotState.CHANGE_CITY_OR_INDEX);
+                users.get(chatId).setBotState(BotState.CHANGE_SETTINGS);
                 break;
-//            case "по названию":
-//                users.get(chatId).setBotState(BotState.CHANGE_CITY);
-//                break;
-//            case "по индексу":
-//                users.get(chatId).setBotState(BotState.CHANGE_INDEX);
-//                break;
             case "/current":
                 users.get(chatId).setBotState(BotState.CURRENT_FORECAST);
                 break;
@@ -95,44 +67,62 @@ public class Bot extends TelegramLongPollingBot {
         }
     }
 
-    private void processBotState(Update update) {
-        Long chatId = update.getMessage().getChatId();
+    private void sendMessageToUser(Long chatId, String text) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(chatId.toString());
+        sendMessage.setText(text);
+        try {
+            execute(sendMessage);
+        } catch (TelegramApiException e) {
+            log.error(e.toString(), e);
+        }
+    }
+
+    private void processBotState(Update update, Long chatId) {
+        if (update.getMessage().hasText() && update.getMessage().getText().equals("/start")) {
+            return;
+        }
         switch (users.get(chatId).getBotState()) {
             case DEFAULT:
-                forecast(update);
+                sendMessageToUser(chatId, "Не понимаю, выбери команду из меню \uD83D\uDE43");
                 break;
-            case CHANGE_CITY_OR_INDEX:
-                changeCityOrIndex(update);
+            case CHANGE_SETTINGS:
+                sendMessageToUser(chatId, "Отправь название города на русском или английском языке, " +
+                        "6 цифр индекса города РФ или геолокацию");
+                users.get(chatId).setBotState(BotState.READ_SETTINGS);
                 break;
-            case CHANGE_CITY:
-                changeCity(update);
-                break;
-            case READ_CITY:
-                readCity(update);
-                break;
-            case CHANGE_INDEX:
-                changeIndex(update);
-                break;
-            case READ_INDEX:
-                readIndex(update);
+            case READ_SETTINGS:
+                readSettings(update, chatId);
                 break;
             case CURRENT_FORECAST:
             case FUTURE_FORECAST:
-                requestForecast(update);
+                requestForecast(chatId);
+                users.get(chatId).setBotState(BotState.DEFAULT);
                 break;
         }
     }
 
-    private void requestForecast(Update update) {
+    private void readSettings(Update update, Long chatId) {
+        if (update.getMessage().hasLocation()) {
+            users.get(chatId).setLocation(update.getMessage().getLocation());
+            sendMessageToUser(chatId, users.get(chatId).getSettings());
+        } else if (update.getMessage().hasText()) {
+            String userInput = update.getMessage().getText();
+            if (isIndex(userInput)) {
+                users.get(chatId).setIndex(Integer.parseInt(userInput));
+                sendMessageToUser(chatId, users.get(chatId).getSettings());
+            } else if (isCity(userInput)) {
+                users.get(chatId).setCity(userInput);
+                sendMessageToUser(chatId, users.get(chatId).getSettings());
+            } else {
+                sendMessageToUser(chatId, "Не понимаю, давай попробуем еще разок \uD83E\uDD13");
+            }
+        }
+    }
+
+    private void requestForecast(Long chatId) {
         String forecastType;
         String messageText;
-        SendMessage sendMessage = new SendMessage();
-        Long chatId = update.getMessage().getChatId();
-
-        if (users.get(chatId).getBotState() == null) {
-            changeCityOrIndex(update);
-            return;
-        }
 
         if (users.get(chatId).getBotState() == BotState.CURRENT_FORECAST) {
             forecastType = "weather";
@@ -140,52 +130,32 @@ public class Bot extends TelegramLongPollingBot {
             forecastType = "forecast";
         }
 
-        sendMessage.setChatId(chatId.toString());
         if (users.get(chatId).getCity() != null) {
             messageText = weatherRequest.getForecast(users.get(chatId).getCity(), forecastType);
-        } else {
+        } else if (users.get(chatId).getIndex() != null) {
             messageText = weatherRequest.getForecast(users.get(chatId).getIndex(), forecastType);
+        } else { //else if (users.get(chatId).getLocation() != null)
+            messageText = weatherRequest.getForecast(users.get(chatId).getLocation(), forecastType);
         }
+
         if (messageText.equals("CityNotFound")) {
             messageText = "Такой город по названию или индексу не найден, измени настройки";
             users.get(chatId).setBotState(BotState.DESTINATION_NOT_FOUND);
-        }
-        if (messageText.equals("ERROR")) {
+        } else if (messageText.equals("ERROR")) {
             messageText = "Произошла критическая ошибка на при запросе прогноза погоды от сервера. Попробуйте позже";
             users.get(chatId).setBotState(BotState.DEFAULT);
         }
-        sendMessage.setText(messageText);
-        sendMessageToUser(sendMessage);
-        if (users.get(chatId).getBotState() == BotState.DESTINATION_NOT_FOUND) {
-            changeCityOrIndex(update);
-        }
-    }
 
-    private void readIndex(Update update) {
-        Long chatId = update.getMessage().getChatId();
-        String userInput = update.getMessage().getText();
-        if (!update.getMessage().hasText() || !isIndex(userInput)) {
-            SendMessage sendMessage = new SendMessage();
-            sendMessage.setChatId(chatId.toString());
-            sendMessage.setText("Неправильный индекс!\n" +
-                    "Отправьте индекс города РФ в формате 123456");
-            sendMessageToUser(sendMessage);
-            return;
-        }
-        users.get(chatId).setIndex(Integer.parseInt(userInput));
-        users.get(chatId).setCity(null);
-        users.get(chatId).setBotState(BotState.DEFAULT);
-        forecast(update);
+        sendMessageToUser(chatId, messageText);
     }
 
     private boolean isIndex(String userInput) {
-        int index;
         for (char c : userInput.toCharArray()) {
             if (!Character.isDigit(c)) {
                 return false;
             }
         }
-        // проверка, что индекс не начинается с нулей
+        Integer index;
         try {
             index = Integer.parseInt(userInput);
         }
@@ -195,105 +165,18 @@ public class Bot extends TelegramLongPollingBot {
         return Integer.toString(index).length() == 6;
     }
 
-    private void changeIndex(Update update) {
-        Long chatId = update.getMessage().getChatId();
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId.toString());
-        sendMessage.setText("Отправьте индекс города РФ в формате 123456\n");
-        sendMessageToUser(sendMessage);
-        users.get(chatId).setBotState(BotState.READ_INDEX);
-    }
-
-    private void readCity(Update update) {
-        Long chatId = update.getMessage().getChatId();
-        if (update.getMessage().hasText()) {
-            users.get(chatId).setCity(update.getMessage().getText());
-            users.get(chatId).setIndex(null);
-            users.get(chatId).setBotState(BotState.DEFAULT);
-            forecast(update);
+    private boolean isCity(String userInput) {
+        for (char c : userInput.toCharArray()) {
+            if (Character.isDigit(c)) {
+                return false;
+            }
         }
-    }
-
-    private void changeCity(Update update) {
-        Long chatId = update.getMessage().getChatId();
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId.toString());
-        sendMessage.setText("Отправьте название города на русском или английском языке");
-        sendMessageToUser(sendMessage);
-        users.get(chatId).setBotState(BotState.READ_CITY);
-    }
-
-    private void greeting(Update update) {
-        Long chatId = update.getMessage().getChatId();
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId.toString());
-        sendMessage.setText("Привет! Это бот прогноза погоды - выпускной проект студента SberItSchool Сергея О.");
-        sendMessageToUser(sendMessage);
-    }
-
-//    private void initializeKeyboards() {
-//        keyboardCity = new ReplyKeyboardMarkup();
-//        ArrayList<KeyboardRow> keyboardCityArray = new ArrayList<>();
-//        KeyboardRow keyboardCityRow = new KeyboardRow();
-//        keyboardCityRow.add(new KeyboardButton("по названию"));
-//        keyboardCityRow.add(new KeyboardButton("по индексу"));
-//        keyboardCityArray.add(keyboardCityRow);
-//        keyboardCity.setKeyboard(keyboardCityArray);
-//        keyboardCity.setResizeKeyboard(true);
-//
-//        keyboardForecast = new ReplyKeyboardMarkup();
-//        ArrayList<KeyboardRow> keyboardForecastArray = new ArrayList<>();
-//        KeyboardRow keyboardForecast1 = new KeyboardRow();
-//        KeyboardRow keyboardForecast2 = new KeyboardRow();
-//        keyboardForecast1.add(new KeyboardButton("Погода сейчас"));
-//        keyboardForecast1.add(new KeyboardButton("На 5 дней"));
-//        keyboardForecast2.add(new KeyboardButton("Сменить город"));
-//        keyboardForecastArray.add(keyboardForecast1);
-//        keyboardForecastArray.add(keyboardForecast2);
-//        keyboardForecast.setKeyboard(keyboardForecastArray);
-//        keyboardForecast.setResizeKeyboard(true);
-//    }
-
-    private boolean isNewUser(Update update) {
-        Long chatId = update.getMessage().getChatId();
-        if (users.get(chatId) == null) {
-            users.put(chatId, new User());
-            return true;
+        for (char c : userInput.toCharArray()) {
+            if (!Character.isAlphabetic(c) && c != ' ' && c != '-' && c != '\'') {
+                return false;
+            }
         }
-        return false;
-    }
-
-    private void changeCityOrIndex(Update update) {
-        Long chatId = update.getMessage().getChatId();
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId.toString());
-        sendMessage.setText("Давай настроим город! Выбери способ:");
-//        sendMessage.setReplyMarkup(keyboardCity);
-        sendMessageToUser(sendMessage);
-    }
-
-    private void forecast(Update update) {
-        String settings;
-        Long chatId = update.getMessage().getChatId();
-
-        if (users.get(chatId).getCity() != null) {
-            settings = "Город: " + users.get(chatId).getCity();
-        } else
-            settings = "Индекс: " + users.get(chatId).getIndex().toString();
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId.toString());
-        sendMessage.setText("Текущие настройки - " + settings + "\n" +
-                "Выбери интересующий прогноз");
-//        sendMessage.setReplyMarkup(keyboardForecast);
-        sendMessageToUser(sendMessage);
-    }
-
-    private void sendMessageToUser(SendMessage sendMessage) {
-        try {
-            execute(sendMessage);
-        } catch (TelegramApiException e) {
-            log.error(e.toString(), e);
-        }
+        return userInput.length() > 1;
     }
 }
 

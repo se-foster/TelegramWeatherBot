@@ -94,19 +94,19 @@ public class CurrentWeather {
 
     public String CurrentForecast() {
 
-        String temperature = String.format("\uD83C\uDF21️%+.0f°C, ощущается как %+.0f°C",
+        String temperature = String.format("\uD83C\uDF21️ %+.0f°C, ощущается как %+.0f°C",
                 main.temp, main.feels_like);
 
         date.setTimeZone(TimeZone.getTimeZone("UTC"));
         time.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-        return name + " \uD83D\uDDD3 " + date.format(new Date((dt + timezone) * 1000)) + "\n" +
-                " " + icons.iconsMap.get(weather[0].icon) + " " + weather[0].description + "\n" +
+        return name + "\n\uD83D\uDDD3 " + date.format(new Date((dt + timezone) * 1000)) + "\n" +
+                icons.iconsMap.get(weather[0].icon) + " " + weather[0].description + "\n" +
                 temperature  + "\n" +
-                "атмосферное давление " + Math.round(main.pressure * 0.75) + " мм рт.ст.\n" +
-                "влажность " + main.humidity + "%   " +
+                "атмосф. давление " + Math.round(main.pressure * 0.75) + " мм рт.ст.\n" +
+                "влажность " + main.humidity + "% " +
                 "\uD83D\uDCA8 " + Math.round(wind.speed) + " м/с" + " \uD83E\uDDED " + wind.getDirection() + "\n" +
                 "\uD83C\uDF05 " + time.format(new Date((sys.sunrise + timezone) * 1000)) +
-                " \uD83C\uDF06 " + time.format(new Date((sys.sunset + timezone) * 1000));
+                "    \uD83C\uDF06 " + time.format(new Date((sys.sunset + timezone) * 1000));
     }
 }
