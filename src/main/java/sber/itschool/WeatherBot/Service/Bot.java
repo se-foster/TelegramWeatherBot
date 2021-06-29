@@ -10,6 +10,7 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import sber.itschool.WeatherBot.Config.BotConfig;
 import sber.itschool.WeatherBot.Config.BotState;
@@ -174,6 +175,13 @@ public class Bot extends TelegramLongPollingBot {
 
     private void requestFutureForecast(Update update, Long chatId) {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
+        inlineKeyboardButton.setText("Тык");
+        inlineKeyboardButton.setCallbackData("Button \"Тык\" has been pressed");
+        List<InlineKeyboardButton> keyboardButtonsRow1 = new ArrayList<>();
+        keyboardButtonsRow1.add(inlineKeyboardButton);
+        List<List<InlineKeyboardButton>> rowList= new ArrayList<>();
+        rowList.add(keyboardButtonsRow1);
 
 //        String forecastType;
         String messageText;
