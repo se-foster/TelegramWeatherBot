@@ -2,18 +2,14 @@ package sber.itschool.WeatherBot.Config;
 
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.stereotype.Component;
 
-@Configuration
+@Component
 @Getter
 @PropertySource("classpath:application.properties")
-public class BotConfig {
+public class WeatherConfig {
 
-    @Value("${botUserName}")
-    String botUserName;
-
-    @Value("${token}")
-    String token;
-
+    @Value("${weatherKey}")
+    String weatherKey;
 }

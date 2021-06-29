@@ -1,8 +1,11 @@
 package sber.itschool.WeatherBot.Config;
 
+import org.springframework.stereotype.Component;
+
 import java.util.HashMap;
 import java.util.Map;
 
+@Component
 public class Icons {
 
     Map<String, String> iconsMap = new HashMap<>();

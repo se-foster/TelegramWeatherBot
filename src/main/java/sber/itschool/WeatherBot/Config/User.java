@@ -1,9 +1,11 @@
 package sber.itschool.WeatherBot.Config;
 
 import lombok.Getter;
+import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Location;
 
 @Getter
+@Component
 public class User {
 
     String city;
@@ -42,6 +44,14 @@ public class User {
         this.botState = BotState.DEFAULT;
         this.settings = "Установлен индекс " + index + "\n" +
                 "Воспользуйся меню для запроса прогноза погоды или смены настроек";
+    }
+
+    public void clear() {
+        this.index = null;
+        this.city = null;
+        this.location = null;
+        this.botState = null;
+        this.settings = null;
     }
 
     public void setBotState(BotState botState) {

@@ -2,11 +2,13 @@ package sber.itschool.WeatherBot.Config;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Setter;
+import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Setter
+@Component
 @JsonIgnoreProperties(value = {"coord", "clouds", "id", "cod", "base", "visibility", "rain", "snow"})
 public class CurrentWeather {
 
@@ -90,7 +92,7 @@ public class CurrentWeather {
     private SimpleDateFormat date = new SimpleDateFormat("E d MMM HH:mm", Locale.forLanguageTag("ru"));
     private SimpleDateFormat time = new SimpleDateFormat("HH:mm");
 
-    private final Icons icons = new Icons();
+    final Icons icons = new Icons();
 
     public String CurrentForecast() {
 

@@ -2,21 +2,23 @@ package sber.itschool.WeatherBot.Config;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Setter;
+import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Setter
+@Component
 @JsonIgnoreProperties(value = {"cod", "message", "cnt"})
-public class FutureWeather {
+public class FutureWeather extends CurrentWeather {
 
     @Setter
     @JsonIgnoreProperties(value = {"clouds", "visibility", "rain", "snow", "sys", "dt_txt"})
     private static class WeatherArray {
         private long dt;
-        private CurrentWeather.Main main;
-        private CurrentWeather.Weather[] weather;
-        private CurrentWeather.Wind wind;
+        private Main main;
+        private Weather[] weather;
+        private Wind wind;
         private float pop;
     }
 
@@ -37,14 +39,11 @@ public class FutureWeather {
     private SimpleDateFormat dayNumber = new SimpleDateFormat("d");
     private SimpleDateFormat hour = new SimpleDateFormat("h");
 
-    private final Icons icons = new Icons();
-
     public String FutureForecast() {
 
         Date date;
         int day = 0;
         String result = city.name + "\n";
-        String res1 = "";
         String temperature;
 
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
