@@ -1,7 +1,6 @@
 package sber.itschool.WeatherBot.Config;
 
 import org.springframework.stereotype.Component;
-
 import java.util.HashMap;
 import java.util.Map;
 

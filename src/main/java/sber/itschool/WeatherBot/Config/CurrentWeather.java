@@ -3,7 +3,6 @@ package sber.itschool.WeatherBot.Config;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Setter;
 import org.springframework.stereotype.Component;
-
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -94,7 +93,7 @@ public class CurrentWeather {
 
     final Icons icons = new Icons();
 
-    public String CurrentForecast() {
+    public String currentForecast() {
 
         String temperature = String.format("\uD83C\uDF21️ %+.0f°C, ощущается как %+.0f°C",
                 main.temp, main.feels_like);

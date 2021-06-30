@@ -13,43 +13,45 @@ import sber.itschool.WeatherBot.Config.WeatherConfig;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 
 @Component
 @Slf4j
 public class WeatherRequest {
 
-    final WeatherConfig сonfig;
+    final WeatherConfig config;
 
-    public WeatherRequest(WeatherConfig сonfig) {
-        this.сonfig = сonfig;
+    public WeatherRequest(WeatherConfig config) {
+        this.config = config;
     }
 
-    public String getForecast(String city, String forecastType) {
+    public String getForecast(String city, String forecastType, String dateUserChoice) {
         String urlString = "https://api.openweathermap.org/data/2.5/" + forecastType + "?q="
-                + city + "&appid=" + сonfig.getWeatherKey() + "&lang=ru&units=metric";
+                + city + "&appid=" + config.getWeatherKey() + "&lang=ru&units=metric";
         if (forecastType.equals("weather"))
             return callCurrentForecast(urlString);
         else
-            return callFutureForecast(urlString);
+            return callFutureForecast(urlString, dateUserChoice);
     }
 
-    public String getForecast(Integer index, String forecastType) {
+    public String getForecast(Integer index, String forecastType, String dateUserChoice) {
         String urlString = "https://api.openweathermap.org/data/2.5/" + forecastType + "?zip="
-                + index + ",ru" + "&appid=" + сonfig.getWeatherKey() + "&lang=ru&units=metric";
+                + index + ",ru" + "&appid=" + config.getWeatherKey() + "&lang=ru&units=metric";
         if (forecastType.equals("weather"))
             return callCurrentForecast(urlString);
         else
-            return callFutureForecast(urlString);
+            return callFutureForecast(urlString, dateUserChoice);
     }
 
-    public String getForecast(Location location, String forecastType) {
+    public String getForecast(Location location, String forecastType, String dateUserChoice) {
         String urlString = "https://api.openweathermap.org/data/2.5/" + forecastType +
                 "?lat=" + location.getLatitude() + "&lon=" + location.getLongitude() +
-                "&appid=" + сonfig.getWeatherKey() + "&lang=ru&units=metric";
+                "&appid=" + config.getWeatherKey() + "&lang=ru&units=metric";
         if (forecastType.equals("weather"))
             return callCurrentForecast(urlString);
         else
-            return callFutureForecast(urlString);
+            return callFutureForecast(urlString, dateUserChoice);
     }
 
     private String callCurrentForecast(String urlString)  {
@@ -66,13 +68,13 @@ public class WeatherRequest {
             return "ERROR";
         }
 
-        return currentWeather.CurrentForecast();
+        return currentWeather.currentForecast();
     }
 
-    private String callFutureForecast(String urlString)  {
+    FutureWeather futureWeather;
+    private String callFutureForecast(String urlString, String dateUserChoice)  {
 
         ObjectMapper objectMapper = new ObjectMapper();
-        FutureWeather futureWeather;
         try {
             URL url = new URL(urlString);
             futureWeather = objectMapper.readValue(url, FutureWeather.class);
@@ -83,7 +85,11 @@ public class WeatherRequest {
             return "ERROR";
         }
 
-        return futureWeather.FutureForecast();
+        return futureWeather.forecastForChosenDate(dateUserChoice);
+    }
+
+    public ArrayList<String> getForecastDates(){
+        return futureWeather.getForecastDates();
     }
 
 }
