@@ -1,20 +1,16 @@
 package sber.itschool.WeatherBot.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Location;
 import sber.itschool.WeatherBot.Config.CurrentWeather;
 import sber.itschool.WeatherBot.Config.FutureWeather;
 import sber.itschool.WeatherBot.Config.WeatherConfig;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 
 @Component
 @Slf4j

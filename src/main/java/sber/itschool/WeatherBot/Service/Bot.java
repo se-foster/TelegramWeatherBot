@@ -1,8 +1,5 @@
 package sber.itschool.WeatherBot.Service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -13,9 +10,9 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import sber.itschool.WeatherBot.Config.BotConfig;
+import sber.itschool.WeatherBot.Config.Keyboard;
 import sber.itschool.WeatherBot.Enum.BotState;
 import sber.itschool.WeatherBot.Config.User;
 import java.util.*;
@@ -30,6 +27,8 @@ public class Bot extends TelegramLongPollingBot {
     WeatherRequest weatherRequest;
     @Autowired
     Serializer serializer;
+    @Autowired
+    Keyboard keyboard;
 
     public Bot(BotConfig config) {
         this.config = config;
@@ -75,7 +74,9 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private void readUserCommand(Update update, Long chatId) {
+
         String userCommand;
+
         if (update.hasMessage() && update.getMessage().hasText()) {
             userCommand = update.getMessage().getText();
         } else if (update.hasCallbackQuery()) {
@@ -163,36 +164,10 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private void readSettings(Message message, Long chatId) {
-        // button 1
-        InlineKeyboardButton currentForecastButton = new InlineKeyboardButton();
-        currentForecastButton.setText("⌚️ текущий прогноз");
-        currentForecastButton.setCallbackData("/current");
-        // button 2
-        InlineKeyboardButton futureForecastButton = new InlineKeyboardButton();
-        futureForecastButton.setText("\uD83D\uDDD3 на 5 дней");
-        futureForecastButton.setCallbackData("/future");
-        // button 3
-        InlineKeyboardButton settingsButton = new InlineKeyboardButton();
-        settingsButton.setText("⚙ сменить город");
-        settingsButton.setCallbackData("/settings");
-        // row 1
-        List<InlineKeyboardButton> row1 = new LinkedList<>();
-        row1.add(currentForecastButton);
-        row1.add(futureForecastButton);
-        // row 2
-        List<InlineKeyboardButton> row2 = new LinkedList<>();
-        row2.add(settingsButton);
-        // rows
-        List<List<InlineKeyboardButton>> rows = new LinkedList<>();
-        rows.add(row1);
-        rows.add(row2);
-        // keyboard
-        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
-        keyboard.setKeyboard(rows);
 
         if (message.hasLocation()) {
             users.get(chatId).setLocation(message.getLocation());
-            sendMessageToUserWithKeyboard(chatId, users.get(chatId).getSettings(), keyboard);
+            sendMessageToUserWithKeyboard(chatId, users.get(chatId).getSettings(), keyboard.afterSettingsKeyboard());
         } else if (message.hasText()) {
             String userInput = message.getText();
             if (userInput.equals("/current") || userInput.equals("/future")) {
@@ -200,10 +175,10 @@ public class Bot extends TelegramLongPollingBot {
             }
             if (isIndex(userInput)) {
                 users.get(chatId).setIndex(Integer.parseInt(userInput));
-                sendMessageToUserWithKeyboard(chatId, users.get(chatId).getSettings(), keyboard);
+                sendMessageToUserWithKeyboard(chatId, users.get(chatId).getSettings(), keyboard.afterSettingsKeyboard());
             } else if (isCity(userInput)) {
                 users.get(chatId).setCity(userInput);
-                sendMessageToUserWithKeyboard(chatId, users.get(chatId).getSettings(), keyboard);
+                sendMessageToUserWithKeyboard(chatId, users.get(chatId).getSettings(), keyboard.afterSettingsKeyboard());
             } else {
                 sendTextMessageToUser(chatId, "Что-то не похоже на индекс или название города \uD83E\uDD13");
             }
@@ -246,16 +221,6 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private void requestFutureForecast(Long chatId, CallbackQuery callbackQuery) {
-        // button settings
-        InlineKeyboardButton settingsButton = new InlineKeyboardButton();
-        settingsButton.setText("⚙ сменить город");
-        settingsButton.setCallbackData("/settings");
-        // buttons
-        InlineKeyboardButton btmBack = new InlineKeyboardButton();
-        InlineKeyboardButton btmForward = new InlineKeyboardButton();
-        // rows
-        List<InlineKeyboardButton> row1 = new LinkedList<>();
-        List<InlineKeyboardButton> row2 = new LinkedList<>();
 
         String messageText = null;
         String userChoice;
@@ -273,7 +238,9 @@ public class Bot extends TelegramLongPollingBot {
             messageText = weatherRequest.getForecast(users.get(chatId).getLocation(), "forecast", userChoice);
         }
 
-        if (messageText.equals("CityNotFound")) {
+        if (messageText == null) {
+            return;
+        } else if (messageText.equals("CityNotFound")) {
             sendTextMessageToUser(chatId, "Такой город по названию или индексу не найден, измени настройки");
             return;
         } else if (messageText.equals("ERROR")) {
@@ -285,36 +252,11 @@ public class Bot extends TelegramLongPollingBot {
 
         ArrayList<String> dates = weatherRequest.getForecastDates();
 
-        int userChoicePos = dates.indexOf(userChoice);
-
-        if (userChoicePos > 0) {
-            btmBack.setText("⬅️ " + dates.get(userChoicePos - 1));
-            btmBack.setCallbackData(dates.get(userChoicePos - 1));
-            row1.add(btmBack);
-            if (userChoicePos < dates.size() - 1) {
-                btmForward.setText("➡️️ " + dates.get(userChoicePos + 1));
-                btmForward.setCallbackData(dates.get(userChoicePos + 1));
-                row1.add(btmForward);
-            }
-        } else { // userChoicePos == 0 || userChoicePos == -1
-            btmForward.setText("➡️️ " + dates.get(1));
-            btmForward.setCallbackData(dates.get(1));
-            row1.add(btmForward);
-        }
-
-        row2.add(settingsButton);
-        // rows
-        List<List<InlineKeyboardButton>> rows = new LinkedList<>();
-        rows.add(row1);
-        rows.add(row2);
-        // keyboard
-        InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
-        keyboard.setKeyboard(rows);
-
         if (callbackQuery != null) {
-            editMessage(chatId, messageText, keyboard, callbackQuery.getMessage().getMessageId());
+            editMessage(chatId, messageText, keyboard.futureForecastKeyboard(dates, userChoice),
+                    callbackQuery.getMessage().getMessageId());
         } else
-            sendMessageToUserWithKeyboard(chatId, messageText, keyboard);
+            sendMessageToUserWithKeyboard(chatId, messageText, keyboard.futureForecastKeyboard(dates, null));
     }
 
     private void editMessage(Long chatId, String text, InlineKeyboardMarkup keyboard, Integer messageId) {
@@ -326,7 +268,7 @@ public class Bot extends TelegramLongPollingBot {
         try {
             execute(editMessageText);
         } catch (TelegramApiException e) {
-            log.error(e.toString(), e);
+            log.error(e.toString());
         }
     }
 
