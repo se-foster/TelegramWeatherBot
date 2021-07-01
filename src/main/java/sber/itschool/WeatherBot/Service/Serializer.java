@@ -26,7 +26,7 @@ public class Serializer {
 
     public Map<Long, User> deserialize() {
         Map<Long, User> users = null;
-        TypeReference<HashMap<Long, User>> typeRef = new TypeReference<>() {};
+        TypeReference<HashMap<Long, User>> typeRef = new TypeReference<HashMap<Long, User>>() {};
         try {
             users = objectMapper.readValue(new File("Users.json"), typeRef);
         } catch (IOException e) {

@@ -69,7 +69,6 @@ public class Bot extends TelegramLongPollingBot {
         } else if (update.hasCallbackQuery()) {
             processBotState(update.getCallbackQuery(), chatId);
         }
-
         serializer.serialize(users);
     }
 
