@@ -3,6 +3,7 @@ package sber.itschool.WeatherBot.Service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 import sber.itschool.WeatherBot.Config.User;
 import java.io.File;
@@ -12,9 +13,14 @@ import java.util.Map;
 
 @Component
 @Slf4j
+@Import(ObjectMapper.class)
 public class Serializer {
 
-    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectMapper objectMapper;
+
+    public Serializer(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     public void serialize(Map<Long, User> users) {
         try {
@@ -26,7 +32,7 @@ public class Serializer {
 
     public Map<Long, User> deserialize() {
         Map<Long, User> users = null;
-        TypeReference<HashMap<Long, User>> typeRef = new TypeReference<HashMap<Long, User>>() {};
+        TypeReference<HashMap<Long, User>> typeRef = new TypeReference<>() {};
         try {
             users = objectMapper.readValue(new File("Users.json"), typeRef);
         } catch (IOException e) {

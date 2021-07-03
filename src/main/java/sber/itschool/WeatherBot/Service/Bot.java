@@ -15,6 +15,8 @@ import sber.itschool.WeatherBot.Config.BotConfig;
 import sber.itschool.WeatherBot.Config.Keyboard;
 import sber.itschool.WeatherBot.Enum.BotState;
 import sber.itschool.WeatherBot.Config.User;
+import sber.itschool.WeatherBot.Exception.CriticalWeatherApiException;
+import sber.itschool.WeatherBot.Exception.PlaceNotFoundException;
 import java.util.*;
 
 @Component
@@ -116,7 +118,8 @@ public class Bot extends TelegramLongPollingBot {
 
     private void processBotState(Message message, Long chatId) {
         if (message.hasText() && message.getText().equals("/start")
-                && users.get(chatId).getBotState() != BotState.CHANGE_SETTINGS) {
+                && users.get(chatId).getBotState() != BotState.CHANGE_SETTINGS) // зачем?
+             {
             return;
         }
         switch (users.get(chatId).getBotState()) {
@@ -197,21 +200,19 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private void requestCurrentForecast(Long chatId) {
-        String messageText;
 
-        if (users.get(chatId).getCity() != null) {
-            messageText = weatherRequest.getForecast(users.get(chatId).getCity(), "weather", null);
-        } else if (users.get(chatId).getIndex() != null) {
-            messageText = weatherRequest.getForecast(users.get(chatId).getIndex(), "weather", null);
-        } else if (users.get(chatId).getLocation() != null) {
-            messageText = weatherRequest.getForecast(users.get(chatId).getLocation(), "weather", null);
-        } else {
-            return;
-        }
-
-        if (messageText.equals("CityNotFound")) {
+        String messageText = null;
+        try {
+            if (users.get(chatId).getCity() != null) {
+                messageText = weatherRequest.getForecast(users.get(chatId).getCity(), "weather", null);
+            } else if (users.get(chatId).getIndex() != null) {
+                messageText = weatherRequest.getForecast(users.get(chatId).getIndex(), "weather", null);
+            } else if (users.get(chatId).getLocation() != null) {
+                messageText = weatherRequest.getForecast(users.get(chatId).getLocation(), "weather", null);
+            }
+        } catch (PlaceNotFoundException e) {
             messageText = "Такой город по названию или индексу не найден, измени настройки";
-        } else if (messageText.equals("ERROR")) {
+        } catch (CriticalWeatherApiException e) {
             messageText = "Произошла критическая ошибка на при запросе прогноза погоды от сервера. Попробуйте позже";
             users.get(chatId).setBotState(BotState.DEFAULT);
         }
@@ -229,24 +230,19 @@ public class Bot extends TelegramLongPollingBot {
             userChoice = callbackQuery.getData();
         }
 
-        if (users.get(chatId).getCity() != null) {
-            messageText = weatherRequest.getForecast(users.get(chatId).getCity(), "forecast", userChoice);
-        } else if (users.get(chatId).getIndex() != null) {
-            messageText = weatherRequest.getForecast(users.get(chatId).getIndex(), "forecast", userChoice);
-        } else if (users.get(chatId).getLocation() != null) {
-            messageText = weatherRequest.getForecast(users.get(chatId).getLocation(), "forecast", userChoice);
-        }
-
-        if (messageText == null) {
-            return;
-        } else if (messageText.equals("CityNotFound")) {
-            sendTextMessageToUser(chatId, "Такой город по названию или индексу не найден, измени настройки");
-            return;
-        } else if (messageText.equals("ERROR")) {
-            sendTextMessageToUser(chatId, "Произошла ошибка на при запросе прогноза погоды от сервера. " +
-                    "Попробуйте позже");
+        try {
+            if (users.get(chatId).getCity() != null) {
+                messageText = weatherRequest.getForecast(users.get(chatId).getCity(), "forecast", userChoice);
+            } else if (users.get(chatId).getIndex() != null) {
+                messageText = weatherRequest.getForecast(users.get(chatId).getIndex(), "forecast", userChoice);
+            } else if (users.get(chatId).getLocation() != null) {
+                messageText = weatherRequest.getForecast(users.get(chatId).getLocation(), "forecast", userChoice);
+            }
+        } catch (PlaceNotFoundException e) {
+            messageText = "Такой город по названию или индексу не найден, измени настройки";
+        } catch (CriticalWeatherApiException e) {
+            messageText = "Произошла критическая ошибка на при запросе прогноза погоды от сервера. Попробуйте позже";
             users.get(chatId).setBotState(BotState.DEFAULT);
-            return;
         }
 
         ArrayList<String> dates = weatherRequest.getForecastDates();
