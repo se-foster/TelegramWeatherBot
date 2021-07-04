@@ -36,7 +36,7 @@ public class WeatherRequest {
 
     public String getForecast(String city, String forecastType, String dateUserChoice)
             throws CriticalWeatherApiException, PlaceNotFoundException {
-        URI uri = null;
+        URI uri;
         try {
             uri = new URIBuilder()
                     .setScheme("https")
@@ -59,7 +59,7 @@ public class WeatherRequest {
 
     public String getForecast(Integer index, String forecastType, String dateUserChoice)
             throws CriticalWeatherApiException, PlaceNotFoundException {
-        URI uri = null;
+        URI uri;
         try {
             uri = new URIBuilder()
                     .setScheme("https")
@@ -82,7 +82,7 @@ public class WeatherRequest {
 
     public String getForecast(Location location, String forecastType, String dateUserChoice)
             throws CriticalWeatherApiException, PlaceNotFoundException {
-        URI uri = null;
+        URI uri;
         try {
             uri = new URIBuilder()
                     .setScheme("https")
@@ -98,9 +98,6 @@ public class WeatherRequest {
             log.error(e.toString());
             throw new CriticalWeatherApiException();
         }
-        String urlString = "https://api.openweathermap.org/data/2.5/" + forecastType +
-                "?lat=" + location.getLatitude() + "&lon=" + location.getLongitude() +
-                "&appid=" + config.getWeatherKey() + "&lang=ru&units=metric";
         if (forecastType.equals("weather"))
             return callCurrentForecast(uri);
         else
