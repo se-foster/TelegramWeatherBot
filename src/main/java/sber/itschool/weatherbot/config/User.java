@@ -1,9 +1,9 @@
-package sber.itschool.WeatherBot.Config;
+package sber.itschool.weatherbot.config;
 
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Location;
-import sber.itschool.WeatherBot.Enum.BotState;
+import sber.itschool.weatherbot.enums.BotState;
 
 @Getter
 @Component

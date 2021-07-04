@@ -1,4 +1,4 @@
-package sber.itschool.WeatherBot;
+package sber.itschool.weatherbot;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,4 +1,4 @@
-package sber.itschool.WeatherBot.Service;
+package sber.itschool.weatherbot.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,13 +11,15 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import sber.itschool.WeatherBot.Config.BotConfig;
-import sber.itschool.WeatherBot.Config.Keyboard;
-import sber.itschool.WeatherBot.Enum.BotState;
-import sber.itschool.WeatherBot.Config.User;
-import sber.itschool.WeatherBot.Exception.CriticalWeatherApiException;
-import sber.itschool.WeatherBot.Exception.PlaceNotFoundException;
-import java.util.*;
+import sber.itschool.weatherbot.config.BotConfig;
+import sber.itschool.weatherbot.config.Keyboard;
+import sber.itschool.weatherbot.enums.BotState;
+import sber.itschool.weatherbot.config.User;
+import sber.itschool.weatherbot.exception.PlaceNotFoundException;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Map;
 
 @Component
 @Slf4j
@@ -212,9 +214,10 @@ public class Bot extends TelegramLongPollingBot {
             }
         } catch (PlaceNotFoundException e) {
             messageText = "Такой город по названию или индексу не найден, измени настройки";
-        } catch (CriticalWeatherApiException e) {
+        } catch (IOException | URISyntaxException e) {
             messageText = "Произошла критическая ошибка на при запросе прогноза погоды от сервера. Попробуйте позже";
             users.get(chatId).setBotState(BotState.DEFAULT);
+            log.error(e.toString(), e);
         }
 
         sendTextMessageToUser(chatId, messageText);
@@ -240,9 +243,10 @@ public class Bot extends TelegramLongPollingBot {
             }
         } catch (PlaceNotFoundException e) {
             messageText = "Такой город по названию или индексу не найден, измени настройки";
-        } catch (CriticalWeatherApiException e) {
+        } catch (IOException | URISyntaxException e) {
             messageText = "Произошла критическая ошибка на при запросе прогноза погоды от сервера. Попробуйте позже";
             users.get(chatId).setBotState(BotState.DEFAULT);
+            log.error(e.toString(), e);
         }
 
         ArrayList<String> dates = weatherRequest.getForecastDates();

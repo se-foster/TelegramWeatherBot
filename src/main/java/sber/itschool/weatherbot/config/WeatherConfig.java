@@ -1,4 +1,4 @@
-package sber.itschool.WeatherBot.Config;
+package sber.itschool.weatherbot.config;
 
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;

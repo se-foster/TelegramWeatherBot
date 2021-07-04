@@ -1,11 +1,11 @@
-package sber.itschool.WeatherBot.Service;
+package sber.itschool.weatherbot.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
-import sber.itschool.WeatherBot.Config.User;
+import sber.itschool.weatherbot.config.User;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;

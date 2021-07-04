@@ -1,4 +1,4 @@
-package sber.itschool.WeatherBot.Config;
+package sber.itschool.weatherbot.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +9,7 @@ import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
-import sber.itschool.WeatherBot.Service.Bot;
+import sber.itschool.weatherbot.service.Bot;
 
 @Component
 @Slf4j

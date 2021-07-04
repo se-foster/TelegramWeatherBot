@@ -1,4 +1,4 @@
-package sber.itschool.WeatherBot.Enum;
+package sber.itschool.weatherbot.enums;
 
 public enum BotState {
     DEFAULT,

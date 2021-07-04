@@ -1,13 +1,15 @@
-package sber.itschool.WeatherBot.Config;
+package sber.itschool.weatherbot.config;
 
-import sber.itschool.WeatherBot.Config.WeatherSubclass.*;
+import sber.itschool.weatherbot.config.weathersubclass.*;
 import lombok.Setter;
 import org.springframework.stereotype.Component;
-import sber.itschool.WeatherBot.Config.WeatherSubclass.WeatherList;
+import sber.itschool.weatherbot.config.weathersubclass.WeatherList;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Locale;
+
 
 @Setter
 @Component

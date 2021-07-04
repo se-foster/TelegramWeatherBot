@@ -1,4 +1,4 @@
-package sber.itschool.WeatherBot.Exception;
+package sber.itschool.weatherbot.exception;
 
 public class PlaceNotFoundException extends Exception {
 }
